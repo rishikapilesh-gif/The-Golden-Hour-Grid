@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Golden Hour Grid · Emergency Response Coordination</title>
+  <!-- Leaflet CSS for street-level road map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<header>
+  <div class="brand-section">
+    <div class="brand-title">
+      GOLDEN HOUR GRID
+      <span class="demo-banner-badge">SIMULATION · NOT A LIVE DISPATCH SERVICE</span>
+    </div>
+    <div class="brand-subtitle">EMERGENCY RESPONSE COORDINATION · AMBULANCE & HOSPITAL OPERATIONS</div>
+  </div>
+  
+  <div class="header-actions">
+    <div id="conn-badge" class="status-badge offline" style="display:none">
+      <span class="live-indicator-dot" id="conn-dot"></span>
+      <span id="conn-text">Connecting</span>
+    </div>
+
+    <div id="user-display" class="user-session-bar" style="display:none">
+      <span id="user-role-icon">🚑</span>
+      <span id="user-name-tag">User</span>
+      <button id="logout-btn" class="btn-secondary" style="padding:2px 8px;font-size:11px;margin-left:6px">Sign out</button>
+    </div>
+
+    <div class="clock-display">
+      <span style="font-size:11px;color:var(--color-text-muted)">GOLDEN HOUR:</span>
+      <span id="tl">60:00</span>
+    </div>
+  </div>
+</header>
+
+<!-- LOGIN WORKSPACE -->
+<div id="view-login" class="workspace-pane active">
+  <div class="login-container">
+    <div class="login-panel">
+      <h2>Authorized Sign In</h2>
+      <p class="sub">Private operations tool for verified ambulance and hospital personnel.</p>
+      
+      <div id="login-error" class="disclaimer-box" style="display:none;background:var(--color-red-bg);color:var(--color-red);border-color:var(--color-red-border);margin-bottom:14px"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-username">Account username</label>
+          <input id="login-username" type="text" placeholder="e.g. ambulance.demo" required autofocus>
+        </div>
+        
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" placeholder="••••••••••••" required>
+        </div>
+
+        <button type="submit" class="btn-primary" id="login-submit" style="width:100%;padding:10px;font-size:14px">Sign in</button>
+      </form>
+
+      <div class="hint-notice">
+        <strong>Local Prototype Demo Accounts:</strong><br>
+        Ambulance: <code>ambulance.demo</code><br>
+        Hospital: <code>hospital.demo</code><br>
+        <span style="font-size:11px;color:var(--color-text-muted)">(Configured via local .env environment variables)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AMBULANCE WORKSPACE -->
+<div id="view-ambulance" class="workspace-pane">
+  <div class="ambulance-grid">
+    
+    <!-- Left: Intake Pane -->
+    <section class="ambulance-intake-col">
+      <div class="workspace-banner">
+        <span>🚑</span>
+        <div>
+          <h2>Ambulance Dispatch Intake</h2>
+          <small>Incident triage, reported vitals, and destination routing</small>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-card-header">
+          <h3>Patient Intake & Quick Triage</h3>
+        </div>
+        
+        <div class="form-group">
+          <label for="vt">Voice or free-text narrative report</label>
+          <textarea id="vt" rows="2" placeholder="e.g. 35yo male, motorcycle collision, head injury, heart rate 125, spo2 91, reported blood group O negative"></textarea>
+        </div>
+        
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button id="parse" class="btn-secondary" style="font-size:12px">⚡ Parse narrative report</button>
+          <button id="ex" class="btn-secondary" style="font-size:12px">🎲 Random test case</button>
+        </div>
+
+        <div class="form-group">
+          <label>Emergency presets</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="chips"></div>
+        </div>
+
+        <div class="intake-grid">
+          <div class="form-group full-span">
+            <label for="loc">Incident location</label>
+            <select id="loc"></select>
+          </div>
+
+          <div class="form-group full-span">
+            <label for="inj">Injury / Emergency category</label>
+            <select id="inj">
+              <option value="trauma">Multiple trauma / major injury</option>
+              <option value="neuro">Head / neuro / stroke</option>
+              <option value="cardiac">Chest / acute cardiac</option>
+              <option value="ortho">Fracture / severe orthopaedic</option>
+              <option value="burns">Thermal / electrical burns</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="gender">Patient gender (context only)</label>
+            <select id="gender">
+              <option value="Unknown">Unknown</option>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Other / not stated">Other / not stated</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="bg">Reported blood group</label>
+            <select id="bg"></select>
+          </div>
+
+          <div class="form-group">
+            <label for="sev">Dispatch priority</label>
+            <select id="sev">
+              <option value="Critical">Critical</option>
+              <option value="High" selected>High</option>
+              <option value="Moderate">Moderate</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="witness">Witness assessment</label>
+            <select id="witness">
+              <option value="Unknown">Unknown</option>
+              <option value="Critical">Critical</option>
+              <option value="Moderate">Moderate</option>
+              <option value="Stable / normal">Stable / normal</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="hr">Heart rate</label>
+            <div class="input-with-unit">
+              <input id="hr" type="number" min="0" max="300" value="118">
+              <span class="unit-tag">bpm</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="sp">SpO₂</label>
+            <div class="input-with-unit">
+              <input id="sp" type="number" min="0" max="100" value="92">
+              <span class="unit-tag">%</span>
+            </div>
+          </div>
+
+          <div class="form-group full-span">
+            <label for="pao2">PaO₂ (optional)</label>
+            <div class="input-with-unit">
+              <input id="pao2" type="number" min="0" max="700" placeholder="Optional clinical measurement">
+              <span class="unit-tag">mmHg</span>
+            </div>
+          </div>
+
+          <div class="form-group full-span">
+            <label for="source">Scenario source</label>
+            <select id="source">
+              <option>Road traffic collision</option>
+              <option>Multi-vehicle pile-up</option>
+              <option>Fall / workplace injury</option>
+              <option>Fire / burns</option>
+              <option>Cardiac emergency</option>
+              <option>Railway crossing incident</option>
+              <option>Flood / natural hazard</option>
+              <option>Hill road / landslide incident</option>
+              <option>Other / unknown</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:10px">
+          <label>Selectable route hazards / conditions</label>
+          <div class="hazard-checklist" id="hazards">
+            <label class="hazard-label"><input type="checkbox" value="rain"> Heavy rain</label>
+            <label class="hazard-label"><input type="checkbox" value="storm"> Severe weather</label>
+            <label class="hazard-label"><input type="checkbox" value="roadworks"> Roadworks / renewal</label>
+            <label class="hazard-label"><input type="checkbox" value="roadblock"> Roadblock</label>
+            <label class="hazard-label"><input type="checkbox" value="diversion"> Diversion</label>
+            <label class="hazard-label"><input type="checkbox" value="railgate"> Railway gate closed</label>
+            <label class="hazard-label"><input type="checkbox" value="hills"> Hill / ghat road</label>
+            <label class="hazard-label"><input type="checkbox" value="landslide"> Landslide risk</label>
+            <label class="hazard-label"><input type="checkbox" value="flood"> Flooded road</label>
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <button class="btn-primary" id="btn-rank" style="width:100%;padding:10px;font-size:14px">Find and rank hospitals</button>
+        </div>
+
+        <div class="disclaimer-box">
+          Prototype only: reported observations are displayed for coordination. This is not a validated medical triage protocol. Clinical review is required.
+        </div>
+      </div>
+
+      <!-- Journey Status Tracking -->
+      <div class="panel-card">
+        <div class="panel-card-header">
+          <h3>Journey Coordination Milestones</h3>
+        </div>
+        <div class="milestones-strip">
+          <div class="milestone-step" id="s0">Sent</div>
+          <div class="milestone-step" id="s1">En route</div>
+          <div class="milestone-step" id="s2">Near hospital</div>
+          <div class="milestone-step" id="s3">Handover</div>
+        </div>
+        <div class="activity-log" id="status-log">
+          <div class="activity-log-entry">System ready for incident intake.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: Ranked Destinations & Real Road Map -->
+    <section class="ambulance-routing-col">
+      <div class="workspace-banner" style="background-color:#1e3a5f">
+        <span>🏥</span>
+        <div>
+          <h2>Destination Recommendations & Real Road Map</h2>
+          <small>Deterministic ranking: travel ETA, specialist readiness, ICU beds, ER load & blood stock</small>
+        </div>
+      </div>
+
+      <!-- Priority #1 Destination Summary Card -->
+      <div id="priority-dest-card" class="priority-recommendation-card" style="display:none">
+        <div class="priority-header">
+          <div>
+            <span class="status-badge live" style="margin-bottom:4px">RANK #1 RECOMMENDED DESTINATION</span>
+            <div class="priority-title" id="p1-name">Hospital Name</div>
+            <div style="font-size:12px;color:var(--color-text-muted)" id="p1-eta-dist">ETA: -- min · Distance: -- km</div>
+          </div>
+          <div class="score-badge" id="p1-score">Score: --</div>
+        </div>
+
+        <div class="score-breakdown-row" id="p1-breakdown"></div>
+        <div class="tags-list" id="p1-reasons"></div>
+        <div class="tags-list" id="p1-warnings" style="margin-top:4px"></div>
+
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn-primary" id="btn-confirm-dest" style="padding:8px 16px">Confirm destination</button>
+          <button class="btn-secondary" id="btn-stage-blood" style="padding:8px 14px">Stage blood request</button>
+        </div>
+      </div>
+
+      <!-- Real Road Map Container -->
+      <div class="map-panel">
+        <div class="map-control-bar">
+          <span>Real Road Map · Street-Level Navigation</span>
+          <span id="map-provider-status" class="status-badge neutral">Roadmap Mode</span>
+        </div>
+        
+        <!-- Live Map Telemetry HUD -->
+        <div class="map-telemetry-hud" id="ambulance-telemetry-hud" style="display:none">
+          <div class="hud-item">
+            <span class="hud-label">Transit State</span>
+            <span class="hud-val" id="hud-status">EN ROUTE</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Live ETA</span>
+            <span class="hud-val" id="hud-eta">--:--</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Remaining Distance</span>
+            <span class="hud-val" id="hud-dist">-- km</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Live Speed & Priority</span>
+            <span class="hud-val" id="hud-speed">48 km/h · Green Wave</span>
+          </div>
+        </div>
+
+        <div id="interactive-map"></div>
+
+        <!-- Simulation Controls Bar -->
+        <div class="sim-controls-bar" id="sim-controls" style="display:none">
+          <div class="sim-btn-group">
+            <button type="button" class="btn-primary" id="btn-sim-play" style="padding:3px 10px;font-size:11px">⏸ Pause</button>
+            <button type="button" class="btn-secondary" id="btn-sim-reset" style="padding:3px 10px;font-size:11px">🔄 Reset</button>
+          </div>
+          <div class="sim-btn-group">
+            <span style="font-size:11px;color:var(--color-text-muted);align-self:center;margin-right:4px">Simulation Speed:</span>
+            <button type="button" class="btn-secondary" id="btn-speed-1x" style="padding:2px 8px;font-size:11px;font-weight:700">1x</button>
+            <button type="button" class="btn-secondary" id="btn-speed-2x" style="padding:2px 8px;font-size:11px">2x</button>
+            <button type="button" class="btn-secondary" id="btn-speed-4x" style="padding:2px 8px;font-size:11px">4x</button>
+          </div>
+        </div>
+
+        <div class="map-legend">
+          <span class="legend-key"><span class="legend-swatch primary"></span> Recommended road route</span>
+          <span class="legend-key"><span class="legend-swatch alternate"></span> Alternate route</span>
+          <span class="legend-key"><span class="legend-swatch incident"></span> Incident origin</span>
+          <span class="legend-key"><span class="legend-swatch hospital"></span> Eligible hospital</span>
+          <span style="margin-left:auto;font-size:10px" id="map-notice">Standard roadmap tiles</span>
+        </div>
+      </div>
+
+      <!-- Nearest vs Grid #1 Comparison -->
+      <div class="panel-card">
+        <div class="panel-card-header">
+          <h3>Geographically Nearest vs. Highest Ranked Grid Destination</h3>
+        </div>
+        <div id="cmp-box" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="font-size:12px;color:var(--color-text-muted);grid-column:1/-1">Comparison appears after submitting an intake report.</div>
+        </div>
+      </div>
+
+      <!-- Alternative Ranked Destinations List -->
+      <div class="panel-card">
+        <div class="panel-card-header">
+          <h3>All Candidate Hospital Destinations</h3>
+        </div>
+        <div style="font-size:12px;color:var(--color-text-muted);margin-bottom:8px">
+          Dispatcher can override the recommended destination for an authorized operational reason.
+        </div>
+        <div id="rank-list">
+          <div style="font-size:12px;color:var(--color-text-muted)">Rankings appear after submitting an intake report.</div>
+        </div>
+      </div>
+
+      <!-- Selected Destination Coordination Details -->
+      <div id="selected-dest-card" class="panel-card" style="display:none">
+        <div class="panel-card-header">
+          <h3>Destination Coordination Details</h3>
+        </div>
+        <div id="selected-dest-content"></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- HOSPITAL COMMAND WORKSPACE -->
+<div id="view-hospital" class="workspace-pane">
+  <div class="hospital-grid">
+    
+    <div class="workspace-banner" style="background-color:var(--color-navy)">
+      <span>🏥</span>
+      <div>
+        <h2 id="hosp-banner-name">Hospital Command Center</h2>
+        <small id="hosp-banner-status">Assigned Facility Emergency Command & Readiness Control</small>
+      </div>
+    </div>
+
+    <!-- Hospital Readiness Control Strip -->
+    <div class="readiness-strip">
+      <div class="readiness-block">
+        <div class="label">ICU Beds Available</div>
+        <div class="metric" id="hosp-icu-val">--</div>
+        <div class="actions">
+          <button class="btn-secondary" id="icu-dec">-1</button>
+          <button class="btn-secondary" id="icu-inc">+1</button>
+          <span style="font-size:11px;color:var(--color-text-muted);margin-left:6px">Capacity: 6</span>
+        </div>
+      </div>
+
+      <div class="readiness-block">
+        <div class="label">Emergency Dept. Load</div>
+        <div class="metric" id="hosp-er-val">--%</div>
+        <div class="actions">
+          <input type="range" id="er-slider" min="10" max="95" value="50" style="width:120px">
+          <button class="btn-secondary" id="er-save" style="font-size:11px;padding:3px 8px">Save</button>
+        </div>
+      </div>
+
+      <div class="readiness-block">
+        <div class="label">Admissions Status</div>
+        <div class="metric" id="hosp-accepting-val" style="font-size:18px">Accepting</div>
+        <div class="actions">
+          <button class="btn-secondary" id="toggle-accepting" style="font-size:11px">Toggle Divert</button>
+        </div>
+      </div>
+
+      <div class="readiness-block">
+        <div class="label">Data Source & Freshness</div>
+        <div class="metric" id="hosp-freshness-val" style="font-size:18px">Fresh</div>
+        <div style="font-size:11px;color:var(--color-text-muted)" id="hosp-updated-val">Updated: Just now</div>
+      </div>
+    </div>
+
+    <!-- Active Patient Emergency Bay Clinical Dossier -->
+    <div id="hospital-dossier-view" class="panel-card" style="display:none;border-top:3px solid var(--color-blue)">
+      <div class="panel-card-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button type="button" class="btn-secondary" id="btn-back-to-queue" style="font-size:11px;padding:3px 8px">← Back to Cases Queue</button>
+          <h3 id="dossier-case-id" style="margin:0">Emergency Bay Patient Clinical Dossier</h3>
+        </div>
+        <span class="status-badge live" id="dossier-status-badge">Approaching Hospital</span>
+      </div>
+      <div id="dossier-content"></div>
+    </div>
+
+    <!-- Incoming Cases Queue -->
+    <div class="panel-card" id="incoming-cases-panel">
+      <div class="panel-card-header">
+        <h3>Incoming Emergency Cases Routed to This Facility</h3>
+      </div>
+      <div id="incoming-cases-list">
+        <div style="font-size:12px;color:var(--color-text-muted)">No incoming ambulance alerts routed to your hospital right now.</div>
+      </div>
+    </div>
+
+    <!-- Compact Route Map for Hospital View -->
+    <div id="hospital-route-map-panel" class="map-panel" style="display:none">
+      <div class="map-control-bar">
+        <span>Incoming Patient Transit Route</span>
+        <span class="status-badge live">Active Route</span>
+      </div>
+      <div id="hospital-interactive-map" style="width:100%;height:260px"></div>
+    </div>
+
+    <!-- Staged Blood Requests Queue -->
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h3>Staged Blood Bank Requests (Demo Coordination Queue)</h3>
+      </div>
+      <div id="staged-blood-list">
+        <div style="font-size:12px;color:var(--color-text-muted)">No staged blood requests pending.</div>
+      </div>
+    </div>
+
+    <!-- Blood Inventory Quick Editor -->
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h3>Blood Bank Stock (Reported Available Units)</h3>
+      </div>
+      <div class="blood-grid" id="hosp-blood-grid"></div>
+      <div style="font-size:11px;color:var(--color-text-muted);margin-top:8px">
+        Tap + / - to adjust sample units for your blood bank. Real units require licensed blood bank verification.
+      </div>
+    </div>
+
+    <!-- Specialist Status Editor -->
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h3>Specialists on Duty Readiness</h3>
+      </div>
+      <div id="hosp-spec-list"></div>
+      <div style="font-size:11px;color:var(--color-text-muted);margin-top:8px">
+        Update specialist on-call state for your facility.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

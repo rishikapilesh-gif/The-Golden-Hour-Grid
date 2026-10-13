@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  golden-hour-grid:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: golden_hour_grid_app
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - DEMO_MODE=true
+      - PORT=8000
+      - DEMO_AMBULANCE_USERNAME=ambulance.demo
+      - DEMO_AMBULANCE_PASSWORD=AmbDemoPass2026!
+      - DEMO_HOSPITAL_USERNAME=hospital.demo
+      - DEMO_HOSPITAL_PASSWORD=HospDemoPass2026!
+      - DEMO_HOSPITAL_ID=demo-hospital-1
+      - DATABASE_URL=sqlite:///./golden_hour_grid.db
+      - SESSION_COOKIE_SECURE=false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

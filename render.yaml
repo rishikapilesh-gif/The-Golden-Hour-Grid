@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: golden-hour-grid
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash scripts/start.sh
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEMO_AMBULANCE_USERNAME
+        value: ambulance.demo
+      - key: DEMO_AMBULANCE_PASSWORD
+        value: AmbDemoPass2026!
+      - key: DEMO_HOSPITAL_USERNAME
+        value: hospital.demo
+      - key: DEMO_HOSPITAL_PASSWORD
+        value: HospDemoPass2026!
+      - key: DEMO_HOSPITAL_ID
+        value: demo-hospital-1
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: DEMO_FEED_ENABLED
+        value: "true"
