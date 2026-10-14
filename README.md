@@ -1,200 +1,254 @@
-# 🚑 Golden Hour Grid
+Here is the complete, professional, non-AI-slop `README.md` written in standard engineering documentation style. You can copy and paste the code block below directly into your repository:
 
-**Emergency Response Hospital & Resource Coordination Engine**  
-*A modular, full-stack operational decision-support prototype for acute golden-hour emergency transit.*
+```markdown
+# Golden Hour Grid
 
-> [!IMPORTANT]
-> **RESEARCH & HACKATHON PROTOTYPE NOTICE:**  
-> Golden Hour Grid is an experimental decision-support prototype. It is **NOT** a live dispatch service and does **NOT** communicate with real hospitals, emergency dispatchers, 911/112/108 services, or blood banks. All facility names, locations, bed counts, blood inventories, specialist rosters, and transit routes are synthetic demonstration fixtures.
+**Deterministic emergency response & clinical destination coordination engine for acute medical transit.**
 
----
-
-## 🌟 Key Capabilities & Features
-
-1. **Unified Single-Origin Architecture (Zero-Conflict Hosting):**
-   - FastAPI serves both the secure backend REST/WebSocket APIs and the responsive web client directly from the same port and domain.
-   - **No separate Node.js / npm build step required.**
-   - Zero CORS complications, zero cookie domain mismatches, zero reverse-proxy overhead.
-
-2. **Role-Scoped Operations Workspaces (Strict Private Access):**
-   - **Ambulance Workspace (`/ambulance`):** Incident triage intake (trauma, neuro, cardiac, burns, vitals PaO₂/SpO₂/HR, weather/railway hazards), explainable deterministic hospital ranking, and interactive transit navigation.
-   - **Hospital Command Workspace (`/hospital`):** Incoming transit queue, one-click accept/decline, active bay dossier, live approaching ambulance map, attending doctor paging/dispatch, bay readiness checklist, and clinical handover completion.
-
-3. **Interactive Real Road Map & Moving Ambulance Simulation:**
-   - Real street-level road network tiles (OpenStreetMap / Google Maps Platform adapter).
-   - Smooth animated ambulance marker with flashing emergency beacon light that rotates along genuine road curves.
-   - Live Telemetry HUD: Real-time countdown ETA, distance remaining, transit speed, and corridor green-wave signal status.
-   - Playback speed controls (`1x`, `2x`, `4x`, pause, and reset).
-
-4. **Safety-First Deterministic Ranking Engine:**
-   - Score calculated purely from clinical specialty match, verified blood bank readiness, ER load, ICU beds, and live transit ETA.
-   - **Zero AI hallucinations in patient routing:** Language models never select or override hospital rankings.
-   - Gender-invariant; no diagnostic survival percentages.
+[![Build & Tests](https://img.shields.io/badge/tests-23%20passed-2ea44f?style=flat-square)](./tests)
+[![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue?style=flat-square)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/backend-FastAPI%20%2F%20SQLAlchemy%202.x-009688?style=flat-square)](https://fastapi.tiangolo.com)
+[![Architecture](https://img.shields.io/badge/architecture-single--origin%20%2F%20zero--build-4682b4?style=flat-square)](#architecture)
+[![License](https://img.shields.io/badge/license-MIT-informational?style=flat-square)](./LICENSE)
 
 ---
 
-## 🚀 Quick Start (Local Development)
+> ### ⚠️ Operational Scope & Clinical Research Notice
+> Golden Hour Grid is an open-source technical prototype and logistical demonstration. It is **not** an operational emergency dispatch service, does **not** integrate with municipal emergency lines (911 / 112 / 108), and does **not** provide medical diagnosis or survival probability calculations. 
+> 
+> All facility registries, bed capacities, blood bank counts, physician schedules, and road geometries bundled in this repository are **synthetic demonstration data**. Real-world deployment requires integration with authorized local healthcare APIs and institutional clinical governance review.
+
+---
+
+## Overview
+
+In acute trauma, neurovascular crises, and cardiovascular emergencies, patient outcomes depend directly on transit time to a facility with matching active capabilities—not merely the geographically closest building.
+
+**Golden Hour Grid** provides a low-latency, role-segregated operational coordination platform for ambulance crews and hospital emergency departments:
+
+- **Ambulance Workstation (`/ambulance`):** Rapid incident intake, vital metric logging (PaO₂, SpO₂, Heart Rate), route hazard identification, and deterministic multi-criteria hospital ranking.
+- **Hospital Command Console (`/hospital`):** Real-time incoming case queue, one-click bay acceptance/decline, approaching vehicle road telemetry, attending physician paging, and formal clinical handover signoff.
+
+The platform eliminates black-box AI from life-critical routing decisions: ranking is **100% deterministic, explainable, and mathematically auditable**.
+
+---
+
+## System Architecture
+
+The project runs as a unified **single-origin service**: FastAPI simultaneously manages authenticated REST/WebSocket endpoints and directly delivers the frontend client.
+
+```
+                          [ Client Browser ]
+                                  │
+                  ┌───────────────┴───────────────┐
+                  ▼                               ▼
+         HTTP / Static Assets            WebSocket (/ws/updates)
+        (HTML / CSS / Leaflet)          (State Synchronization)
+                  │                               │
+                  └───────────────┬───────────────┘
+                                  ▼
+                     [ FastAPI Application ]
+                      ├── Role Authorization (Argon2id)
+                      ├── Deterministic Ranking Engine
+                      ├── Routing & Hazard Adapters
+                      └── Clinical Handover Service
+                                  │
+                                  ▼
+                     [ SQLAlchemy ORM 2.x ]
+                      ├── SQLite (Local Dev / Demo)
+                      └── PostgreSQL (Production Ready)
+```
+
+### Key Technical Decisions
+* **Zero-Build Frontend Pipeline:** The web client uses modern vanilla ES6 modules, CSS variables, and Leaflet CDN maps. No Node.js runtime, Webpack/Vite bundlers, or `node_modules` overhead required.
+* **Zero CORS / Domain Mismatch:** Frontend assets and API routes share the exact same host and port, ensuring strict `HttpOnly`, `SameSite` session cookies operate seamlessly.
+* **Deterministic Scoring Model:** Facilities are ranked via an explainable score weighted by specialty readiness, ER saturation, available ICU capacity, blood unit compatibility, and road transit ETA. Patient gender and demographic attributes are strictly invariant in ranking.
+
+---
+
+## Operational Workspaces
+
+### 1. Ambulance Triage & Transit
+- Real-time road map displaying actual road-network geometry.
+- Animated vehicle marker with directional heading rotation and active hazard indicators (floods, railway crossings, roadblocks).
+- Live telemetry HUD reporting countdown ETA, distance remaining, velocity, and traffic corridor green-wave status.
+- Playback controls (`1x`, `2x`, `4x`, pause) for drill rehearsals and scenario simulations.
+
+### 2. Hospital Emergency Department Command
+- Incoming transit list filtered strictly by facility scope (no cross-hospital data leakage).
+- Detailed Clinical Dossier for accepted cases:
+  - Approaching vehicle position and live arrival clock.
+  - Reported triage vitals with automated clinical review triggers for abnormal ranges (e.g., PaO₂ < 60 mmHg, SpO₂ < 90%).
+  - Staged blood bank reservation checks.
+  - Attending specialist dispatch and paging (Trauma, Neuro, Cardiac, Ortho, Burns).
+  - Bay readiness checklist and structured handover signoff.
+
+---
+
+## Quick Start
 
 ### Prerequisites
 - Python 3.11 or higher
 - Git
 
-### Option A: Windows 1-Click Launch
-Double-click `scripts/run_dev.bat` or run in PowerShell:
-```powershell
-.\scripts\run_dev.ps1
-```
-The server will automatically seed the database and launch at `http://127.0.0.1:8000`.
+### 1. Local Setup
 
-### Option B: Cross-Platform (Mac / Linux / Windows Manual)
 ```bash
-# 1. Create and activate virtual environment
-python -m venv .venv
-source .venv/bin/activate   # On Windows: .venv\Scripts\activate
+# Clone the repository
+git clone https://github.com/<YOUR_ORGANIZATION>/golden-hour-grid.git
+cd golden-hour-grid
 
-# 2. Install dependencies
+# Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate       # On Windows: .venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
 
-# 3. Seed demonstration data & accounts
+# Run the automated seed script (provisions 15 hospitals and demo accounts)
 python scripts/seed_demo_data.py
 python scripts/seed_demo_users.py --ambulance-password "AmbDemoPass2026!" --hospital-password "HospDemoPass2026!"
 
-# 4. Launch FastAPI server
+# Start the application server
 uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
+
 Open **`http://127.0.0.1:8000`** in your browser.
 
----
-
-## 🔑 Demonstration Accounts
-
-| Role | Username | Password | Default Assigned Facility |
-| :--- | :--- | :--- | :--- |
-| **Ambulance Operator** | `ambulance.demo` | `AmbDemoPass2026!` | Field Unit (Apex Sector) |
-| **Hospital ER Command** | `hospital.demo` | `HospDemoPass2026!` | Apex Trauma Center (`demo-hospital-1`) |
+> **Windows Users:** You can launch the environment directly by executing `scripts/run_dev.bat` or `scripts/run_dev.ps1`.
 
 ---
 
-## 📦 How to Upload to GitHub
+## Demonstration Credentials
 
-Follow these steps to push this folder to your GitHub account:
+Pre-configured accounts for verification and technical review:
+
+| Role | Workspace Route | Username | Password | Default Scope |
+| :--- | :--- | :--- | :--- | :--- |
+| **Ambulance Operator** | `/ambulance` | `ambulance.demo` | `AmbDemoPass2026!` | Field Unit (Metropolitan Sector) |
+| **Hospital ED Command** | `/hospital` | `hospital.demo` | `HospDemoPass2026!` | Apex Trauma Center (`demo-hospital-1`) |
+
+---
+
+## Production & Container Deployment
+
+### Running with Docker Compose
+
+A production-ready `Dockerfile` and `docker-compose.yml` are included in the repository root:
 
 ```bash
-# 1. Initialize git inside this folder
-git init
+docker compose up --build -d
+```
+The service will auto-seed the demo database on startup and expose the application on `http://localhost:8000`.
 
-# 2. Add all files
-git add .
+### Deploying to Cloud Platforms (Render, Railway, Fly.io)
 
-# 3. Commit
-git commit -m "feat: complete Golden Hour Grid with unified backend, interactive road map, and hospital clinical dossier"
+Because the project runs as a single service, it deploys to cloud hosts without requiring multiple services or reverse-proxy configuration:
 
-# 4. Create a new repository on GitHub (e.g. 'golden-hour-grid') and link it:
-git branch -M main
-git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/<YOUR_REPOSITORY_NAME>.git
+#### Render (Web Service)
+1. Link your GitHub repository in the [Render Dashboard](https://render.com).
+2. Choose **Python** runtime.
+3. Set **Build Command:** `pip install -r requirements.txt`
+4. Set **Start Command:** `bash scripts/start.sh`
+5. Configure environment variables:
+   * `DEMO_MODE` = `true`
+   * `DEMO_AMBULANCE_PASSWORD` = `AmbDemoPass2026!`
+   * `DEMO_HOSPITAL_PASSWORD` = `HospDemoPass2026!`
+   * `SESSION_COOKIE_SECURE` = `true`
+6. Click **Deploy**.
 
-# 5. Push to GitHub
-git push -u origin main
+#### Railway
+Select **Deploy from GitHub repo**. Railway detects the root `Dockerfile` and `railway.json` and provisions the instance automatically.
+
+---
+
+## Testing & Quality Assurance
+
+The test suite covers cryptographic session hashing, role authorization boundaries, routing heuristics, vital sign safeguards, and end-to-end incident lifecycles:
+
+```bash
+python -m pytest -v
+```
+
+Test coverage includes:
+- Role escalation prevention (ambulance tokens cannot query hospital bay endpoints).
+- Scope enforcement (hospital accounts cannot inspect or mutate neighboring hospital queues).
+- Gender invariance verification in the ranking engine.
+- Session invalidation upon explicit logout.
+
+---
+
+## Environment Configuration
+
+Configuration is managed via environment variables (or a root `.env` file). Reference template:
+
+```ini
+APP_ENV=production
+DEMO_MODE=true
+DATABASE_URL=sqlite:///./golden_hour_grid.db
+
+# Authentication & Session
+SESSION_COOKIE_NAME=ghg_session
+SESSION_COOKIE_SECURE=false      # Set to 'true' when deployed behind HTTPS
+SESSION_TTL_MINUTES=480
+
+# Demo Accounts
+DEMO_AMBULANCE_USERNAME=ambulance.demo
+DEMO_AMBULANCE_PASSWORD=AmbDemoPass2026!
+DEMO_HOSPITAL_USERNAME=hospital.demo
+DEMO_HOSPITAL_PASSWORD=HospDemoPass2026!
+DEMO_HOSPITAL_ID=demo-hospital-1
+
+# Mapping & Routing (Optional)
+MAP_PROVIDER=auto                # 'osm', 'google', or 'auto'
+ROUTING_PROVIDER=auto            # 'osrm', 'google', 'demo', or 'auto'
+GOOGLE_MAPS_BROWSER_API_KEY=
+GOOGLE_MAPS_ROUTES_API_KEY=
 ```
 
 ---
 
-## ☁️ 1-Click Cloud Hosting (Backend + Frontend Together)
-
-Because the project is packaged as a single-origin service, **the backend and frontend run together on a single cloud service** with no extra costs or moving parts.
-
-### Option 1: Deploy on Render (Recommended · Free)
-1. Log in to [Render.com](https://render.com).
-2. Click **New +** -> **Web Service**.
-3. Connect your new GitHub repository.
-4. Render will auto-detect Python. Configure:
-   - **Environment:** `Python 3`
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `bash scripts/start.sh`
-5. In **Environment Variables**, add:
-   - `DEMO_MODE` = `true`
-   - `DEMO_AMBULANCE_PASSWORD` = `AmbDemoPass2026!`
-   - `DEMO_HOSPITAL_PASSWORD` = `HospDemoPass2026!`
-   - `SESSION_COOKIE_SECURE` = `true`
-6. Click **Create Web Service**. Your live HTTPS URL will be ready in ~90 seconds!
-
-*(Alternatively, connect the repository using Render Blueprint which will read `render.yaml` automatically).*
-
----
-
-### Option 2: Deploy on Railway
-1. Log in to [Railway.app](https://railway.app).
-2. Click **New Project** -> **Deploy from GitHub repo**.
-3. Select your repository. Railway detects the `Dockerfile` / `railway.json` and builds automatically.
-4. Add environment variables:
-   - `DEMO_MODE` = `true`
-   - `DEMO_AMBULANCE_PASSWORD` = `AmbDemoPass2026!`
-   - `DEMO_HOSPITAL_PASSWORD` = `HospDemoPass2026!`
-5. Click **Deploy**. Under service settings, generate a domain.
-
----
-
-### Option 3: Run with Docker / Docker Compose
-To run locally or on any Linux VPS with Docker:
-```bash
-docker compose up --build
-```
-Access at `http://localhost:8000`.
-
----
-
-## 🧪 Testing & Verification
-
-Run the automated test suite covering unit tests, integration routes, authorization boundaries, and full end-to-end scenarios:
-```bash
-python -m pytest
-```
-All 23 tests pass with zero failures.
-
----
-
-## 📁 Project Structure
+## Repository Structure
 
 ```text
-├── Dockerfile                  # Container build specification
-├── docker-compose.yml          # 1-command local container orchestration
-├── Procfile                    # PaaS process manager configuration
-├── render.yaml                 # Render Blueprint configuration
+├── Dockerfile                  # Container build instructions
+├── docker-compose.yml          # Container service definition
+├── Procfile                    # PaaS process execution entrypoint
+├── render.yaml                 # Render Blueprint specification
 ├── railway.json                # Railway deployment configuration
-├── requirements.txt            # Pinned Python package dependencies
-├── .env.example                # Safe environment variable template
-├── .gitignore                  # Git ignore rules for secrets and databases
+├── requirements.txt            # Python dependencies
+├── .env.example                # Configuration template
+├── .gitignore                  # Git ignore rules
 │
-├── backend/
-│   └── app/
-│       ├── main.py             # FastAPI entrypoint, SPA routing & WebSocket gateway
-│       ├── api/routes/         # Auth, incidents, hospitals, hospital command, routing
-│       ├── core/               # App configuration, security, Argon2id crypto
-│       ├── db/                 # SQLAlchemy sessions, models base
-│       ├── models/             # Hospital, incident, session, user models
-│       ├── providers/          # Road routing adapters (OSRM, Google Routes, Demo)
-│       ├── realtime/           # WebSocket broadcast hub
-│       ├── schemas/            # Pydantic request/response schemas
-│       └── services/           # Deterministic ranking engine, auth service
+├── backend/app/
+│   ├── main.py                 # FastAPI application, static mounting & WebSocket router
+│   ├── api/routes/             # Auth, incident triage, hospital command, routing APIs
+│   ├── core/                   # Security, Argon2id crypto, application settings
+│   ├── db/                     # Database sessions and base models
+│   ├── models/                 # User, Session, Hospital, Incident schema models
+│   ├── providers/              # Road routing providers (OSRM, Google Routes, Demo)
+│   ├── realtime/               # WebSocket connection manager and event broadcaster
+│   ├── schemas/                # Pydantic validation schemas
+│   └── services/               # Deterministic ranking engine and auth services
 │
 ├── frontend/
-│   ├── index.html              # Two-role operational interface & map containers
-│   ├── styles.css              # TNEA-inspired public-sector design system
-│   └── app.js                  # Map animation, Leaflet renderer, state & telemetry
+│   ├── index.html              # Clean institutional two-role user interface
+│   ├── styles.css              # Minimalist design system (inspired by public-sector portals)
+│   └── app.js                  # Map rendering, telemetry HUD, state synchronization
 │
 ├── scripts/
-│   ├── seed_demo_data.py       # Seeds 15 synthetic hospitals, blood & specialists
-│   ├── seed_demo_users.py      # Seeds demo ambulance & hospital accounts
-│   ├── run_dev.bat             # Windows batch startup script
-│   ├── run_dev.ps1             # PowerShell startup script
-│   └── start.sh                # Linux / Container / Cloud hosting entrypoint
+│   ├── seed_demo_data.py       # Seeds 15 synthetic facilities, blood inventory, staff
+│   ├── seed_demo_users.py      # Provisions demonstration user accounts
+│   ├── start.sh                # Container and cloud production entrypoint
+│   └── run_dev.bat / .ps1      # Local Windows convenience launchers
 │
-├── docs/                       # Architecture, API contract, and safety specifications
-└── tests/                      # Pytest unit, integration, and E2E suites
+├── docs/                       # Technical specifications, API contracts, safety docs
+└── tests/                      # Automated unit, integration, and E2E test suites
 ```
 
 ---
 
-## ⚖️ License & Ethical Safeguards
+## License
 
-Developed for hackathon demonstration and research into acute medical transit logistics. Protected under standard MIT open-source terms. Field deployments require integration with authorized municipal health APIs and clinical governance review.
+This project is distributed under the terms of the **MIT License**. See [LICENSE](./LICENSE) for details.
+```
