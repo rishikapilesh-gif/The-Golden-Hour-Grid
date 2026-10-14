@@ -1,6 +1,3 @@
-Here is the complete, professional, non-AI-slop `README.md` written in standard engineering documentation style. You can copy and paste the code block below directly into your repository:
-
-```markdown
 # Golden Hour Grid
 
 **Deterministic emergency response & clinical destination coordination engine for acute medical transit.**
@@ -251,4 +248,3 @@ GOOGLE_MAPS_ROUTES_API_KEY=
 ## License
 
 This project is distributed under the terms of the **MIT License**. See [LICENSE](./LICENSE) for details.
-```
